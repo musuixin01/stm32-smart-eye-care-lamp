@@ -33,6 +33,11 @@
 
 ## 系统架构
 
+<p align="center">
+  <img src="docs/assets/block_diagram.png" alt="系统框图（手绘）" width="560">
+  <br><sub>系统框图（手绘初稿）</sub>
+</p>
+
 ```mermaid
 flowchart LR
     subgraph IN[输入]

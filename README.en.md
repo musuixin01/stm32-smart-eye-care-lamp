@@ -35,6 +35,11 @@ The firmware follows a **bare-metal super-loop + interrupt** architecture on top
 
 ## System Architecture
 
+<p align="center">
+  <img src="docs/assets/block_diagram.png" alt="Hand-drawn block diagram" width="560">
+  <br><sub>Hand-drawn system block diagram</sub>
+</p>
+
 ```mermaid
 flowchart LR
     subgraph IN[Inputs]
