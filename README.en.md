@@ -58,6 +58,12 @@ flowchart LR
 
 ## Hardware
 
+<p align="center">
+  <img src="docs/assets/wiring.png" alt="Wiring diagram" width="920">
+  <br>
+  <sub>Wiring diagram drawn from the actual firmware pins (vector source: <code>docs/assets/wiring.svg</code>)</sub>
+</p>
+
 | Block | Device | Interface / Pins |
 |---|---|---|
 | MCU | STM32F103RC (Cortex-M3, 256 KB Flash / 48 KB RAM) | — |
@@ -142,6 +148,7 @@ stm32-smart-eye-care-lamp/
 │   ├── user/                 # application & custom BSP drivers
 │   └── STM32F10x_StdPeriph_Driver/   # ST Standard Peripheral Library
 ├── docs/
+│   ├── assets/               # wiring diagram (PNG / SVG source)
 │   ├── hardware.md           # pinout / BOM / dimming theory
 │   └── firmware.md           # architecture / modules / protocols
 ├── LICENSE

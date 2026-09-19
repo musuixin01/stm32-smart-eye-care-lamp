@@ -56,6 +56,12 @@ flowchart LR
 
 ## 硬件方案
 
+<p align="center">
+  <img src="docs/assets/wiring.png" alt="硬件接线示意图" width="920">
+  <br>
+  <sub>硬件接线示意图（依据固件实际引脚绘制，矢量源文件见 <code>docs/assets/wiring.svg</code>）</sub>
+</p>
+
 | 模块 | 器件 | 接口 / 引脚 |
 |---|---|---|
 | 主控 | STM32F103RC（Cortex-M3，256 KB Flash / 48 KB RAM） | — |
@@ -143,6 +149,7 @@ stm32-smart-eye-care-lamp/
 │   ├── user/                 # 应用主程序与自研 BSP 驱动
 │   └── STM32F10x_StdPeriph_Driver/   # ST 标准外设库
 ├── docs/
+│   ├── assets/               # 接线示意图（PNG / SVG 源文件）
 │   ├── hardware.md           # 硬件设计：引脚映射 / BOM / 调光原理
 │   └── firmware.md           # 软件设计：架构 / 模块 / 通信协议
 ├── LICENSE
