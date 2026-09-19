@@ -57,7 +57,7 @@ flowchart LR
 ## 硬件方案
 
 <p align="center">
-  <img src="docs/assets/wiring.png" alt="硬件接线示意图" width="920">
+  <img src="docs/assets/wiring.png?v=2" alt="硬件接线示意图" width="920">
   <br>
   <sub>硬件接线示意图（依据固件实际引脚绘制，矢量源文件见 <code>docs/assets/wiring.svg</code>）</sub>
 </p>

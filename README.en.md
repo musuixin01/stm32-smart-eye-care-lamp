@@ -59,7 +59,7 @@ flowchart LR
 ## Hardware
 
 <p align="center">
-  <img src="docs/assets/wiring.png" alt="Wiring diagram" width="920">
+  <img src="docs/assets/wiring.png?v=2" alt="Wiring diagram" width="920">
   <br>
   <sub>Wiring diagram drawn from the actual firmware pins (vector source: <code>docs/assets/wiring.svg</code>)</sub>
 </p>

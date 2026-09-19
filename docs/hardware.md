@@ -48,7 +48,7 @@ flowchart LR
 下图按最终工程引脚绘制（含电源轨）。矢量源文件为 [`assets/wiring.svg`](assets/wiring.svg)，可自由放大或二次编辑：
 
 <p align="center">
-  <img src="assets/wiring.png" alt="硬件接线示意图" width="940">
+  <img src="assets/wiring.png?v=2" alt="硬件接线示意图" width="940">
 </p>
 
 ---
