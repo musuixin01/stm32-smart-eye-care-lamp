@@ -147,7 +147,7 @@ stm32-smart-eye-care-lamp/
 │   ├── user/                 # application & custom BSP drivers
 │   └── STM32F10x_StdPeriph_Driver/   # ST Standard Peripheral Library
 ├── docs/
-│   ├── assets/               # wiring diagram (PNG / SVG source)
+│   ├── assets/               # custom-board schematic
 │   ├── hardware.md           # pinout / BOM / dimming theory
 │   └── firmware.md           # architecture / modules / protocols
 ├── LICENSE
