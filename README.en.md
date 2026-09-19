@@ -19,7 +19,7 @@
 
 ## Overview
 
-An eye-care desk lamp built around the **STM32F103RC** MCU. A hardware timer generates **PWM** to dim a power LED through an N-MOSFET; two push-buttons raise/lower the brightness. A **ST7735S TFT** shows a boot screen and status, while a **MY1680 voice module** announces the current brightness level after every adjustment, giving both visual and audio feedback. A USART command protocol is reserved for future Bluetooth/Wi-Fi remote control.
+An eye-care desk lamp built around the **STM32F103C8T6** MCU. A hardware timer generates **PWM** to dim a power LED through an NPN transistor; two push-buttons raise/lower the brightness. A **ST7735S TFT** shows a boot screen and status, while a **MY1680 voice module** announces the current brightness level after every adjustment, giving both visual and audio feedback. The firmware is flashed via SWD, and a framed UART command protocol is reserved for future Bluetooth/Wi-Fi remote control.
 
 The firmware follows a **bare-metal super-loop + interrupt** architecture on top of the STM32 Standard Peripheral Library, with every peripheral wrapped in a cohesive, loosely-coupled BSP driver module.
 
@@ -44,10 +44,10 @@ flowchart LR
     MCU["STM32F103C8T6<br/>Cortex-M3 @72MHz"]
     subgraph OUT[Outputs]
         TFT["ST7735S TFT<br/>128x160 - SPI2"]
-        LED["Power LED<br/>PWM - PB0"]
+        LED["Power LED<br/>PWM - PA9"]
         VOICE["MY1680 Voice<br/>USART2"]
     end
-    DBG["Debug USART1<br/>PA9 / PA10"]
+    DBG["SWD debug<br/>PA13 / PA14"]
     K1 --> MCU
     K2 --> MCU
     MCU --> TFT
@@ -59,9 +59,9 @@ flowchart LR
 ## Hardware
 
 <p align="center">
-  <img src="docs/assets/wiring.png?v=2" alt="Wiring diagram" width="920">
+  <img src="docs/assets/schematic.png?v=2" alt="Schematic of the custom board" width="920">
   <br>
-  <sub>Wiring diagram drawn from the actual firmware pins (vector source: <code>docs/assets/wiring.svg</code>)</sub>
+  <sub>Schematic of the custom board (STM32F103C8T6 + 1.8″ ST7735S, drawn in LCEDA)</sub>
 </p>
 
 | Block | Device | Interface / Pins |
@@ -109,7 +109,7 @@ firmware/user/api/
 
 ## Getting Started
 
-**Requirements**: Keil MDK-ARM (ARM Compiler 5), ST-Link V2, an STM32F103RC board.
+**Requirements**: Keil MDK-ARM (ARM Compiler 5), ST-Link V2, an STM32F103C8T6 custom board / dev board.
 
 ```bash
 git clone https://github.com/musuixin01/stm32-smart-eye-care-lamp.git

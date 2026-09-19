@@ -17,7 +17,7 @@
 
 ## 项目简介
 
-一款以 **STM32F103RC** 为主控的智能护眼台灯。使用 **定时器硬件 PWM** 控制 LED 灯珠占空比实现调光，通过两个按键进行亮度加 / 减操作；搭载 **ST7735S TFT 彩屏**显示开机界面与状态信息，并通过 **MY1680 语音模块**在每次调光时同步语音播报当前亮度，形成「屏幕 + 语音」双重交互反馈。同时预留 USART 串口指令协议，便于后续扩展蓝牙 / Wi-Fi 远程控制。
+一款以 **STM32F103C8T6** 为主控的智能护眼台灯。使用 **定时器硬件 PWM** 控制 LED 灯珠占空比实现调光，通过两个按键进行亮度加 / 减操作；搭载 **ST7735S TFT 彩屏**显示开机界面与状态信息，并通过 **MY1680 语音模块**在每次调光时同步语音播报当前亮度，形成「屏幕 + 语音」双重交互反馈。程序经 SWD 烧录调试，并预留串口指令协议，便于后续扩展蓝牙 / Wi-Fi 远程控制。
 
 项目采用**裸机超级循环 + 中断**架构，基于 STM32 标准外设库，将各外设封装为高内聚、低耦合的 BSP 驱动模块。
 
@@ -42,10 +42,10 @@ flowchart LR
     MCU["STM32F103C8T6<br/>Cortex-M3 @72MHz"]
     subgraph OUT[输出 / 交互]
         TFT["ST7735S TFT<br/>128×160 · SPI2"]
-        LED["LED 灯珠<br/>PWM · PB0"]
+        LED["LED 灯珠<br/>PWM · PA9"]
         VOICE["MY1680 语音<br/>USART2"]
     end
-    DBG["调试串口 USART1<br/>PA9 / PA10"]
+    DBG["SWD 烧录调试<br/>PA13 / PA14"]
     K1 --> MCU
     K2 --> MCU
     MCU --> TFT
@@ -57,9 +57,9 @@ flowchart LR
 ## 硬件方案
 
 <p align="center">
-  <img src="docs/assets/wiring.png?v=2" alt="硬件接线示意图" width="920">
+  <img src="docs/assets/schematic.png?v=2" alt="自制板正式原理图" width="920">
   <br>
-  <sub>硬件接线示意图（依据固件实际引脚绘制，矢量源文件见 <code>docs/assets/wiring.svg</code>）</sub>
+  <sub>自制板正式原理图（STM32F103C8T6 + 1.8″ ST7735S，立创EDA 绘制）</sub>
 </p>
 
 | 模块 | 器件 | 接口 / 引脚 |
