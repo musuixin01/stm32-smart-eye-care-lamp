@@ -2,9 +2,9 @@
 
 # 智能护眼台灯固件 · Smart Eye-Care Desk Lamp
 
-**基于 STM32F103RC 的 PWM 无级/五级调光、语音播报与 TFT 彩屏显示的嵌入式裸机项目**
+**基于 STM32F103C8T6 的 PWM 调光、语音播报与 1.8″ TFT 彩屏显示的嵌入式裸机项目**
 
-[![MCU](https://img.shields.io/badge/MCU-STM32F103RC-blue)](https://www.st.com/en/microcontrollers-microprocessors/stm32f103rc.html)
+[![MCU](https://img.shields.io/badge/MCU-STM32F103C8T6-blue)](https://www.st.com/en/microcontrollers-microprocessors/stm32f103c8t6.html)
 [![Core](https://img.shields.io/badge/Core-ARM%20Cortex--M3%20%4072MHz-success)]()
 [![Toolchain](https://img.shields.io/badge/Keil-MDK--ARM-orange)]()
 [![Library](https://img.shields.io/badge/StdPeriph_Lib-V3.5.0-orange)]()
@@ -23,11 +23,11 @@
 
 ## 功能特性
 
-- **硬件 PWM 调光**：TIM3_CH3 输出 1 kHz PWM，无频闪；0% / 25% / 50% / 75% / 100% 五档亮度，软件限幅保护
-- **按键交互**：亮度加 / 减两键，10 ms 软件消抖 + 等待释放，防止误触发与连按
-- **TFT 彩屏显示**：ST7735S（128×160，RGB565，硬件 SPI2），自绘字符 / 汉字 / 位图，含开机欢迎界面
+- **硬件 PWM 调光**：TIM1_CH2（PA9）输出 1 kHz PWM，经 NPN 三极管低边驱动，无频闪；0% / 25% / 50% / 75% / 100% 五档亮度，软件限幅保护
+- **按键交互**：亮度加 / 减两键（PB6/PB7），10 ms 软件消抖 + 等待释放，防止误触发与连按
+- **TFT 彩屏显示**：ST7735S（128×160，RGB565，硬件 SPI2，8P FPC），自绘字符 / 汉字 / 位图，含开机欢迎界面
 - **语音播报**：MY1680 模块经 USART2 发送自定义二进制协议帧，按档位播放 TF 卡语音，BUSY 忙等待防丢帧
-- **调试串口**：USART1（115200），`printf` 重定向，RXNE + IDLE 中断 + 环形缓冲接收，预留上位机控制协议
+- **SWD 烧录调试**：ST-Link 经 PA13/PA14 SWD 烧录与在线调试；串口指令协议帧保留，便于后续扩展蓝牙 / Wi-Fi
 - **精确时基**：SysTick 1 ms 中断提供毫秒 / 微秒延时
 - **可扩展接口**：串口指令帧 + 校验机制，为环境光自适应、无线远程控制预留
 
@@ -36,10 +36,10 @@
 ```mermaid
 flowchart LR
     subgraph IN[输入]
-        K1["KEY1 亮度+<br/>PA0"]
-        K2["KEY2 亮度-<br/>PB8"]
+        K1["KEY1 亮度+<br/>PB6"]
+        K2["KEY2 亮度-<br/>PB7"]
     end
-    MCU["STM32F103RC<br/>Cortex-M3 @72MHz"]
+    MCU["STM32F103C8T6<br/>Cortex-M3 @72MHz"]
     subgraph OUT[输出 / 交互]
         TFT["ST7735S TFT<br/>128×160 · SPI2"]
         LED["LED 灯珠<br/>PWM · PB0"]
@@ -64,13 +64,12 @@ flowchart LR
 
 | 模块 | 器件 | 接口 / 引脚 |
 |---|---|---|
-| 主控 | STM32F103RC（Cortex-M3，256 KB Flash / 48 KB RAM） | — |
-| 显示 | 1.8″ ST7735S TFT，128×160，RGB565 | SPI2：PB13/14/15，CS=PB10，DC=PB11，RES=PB12，BLK=PC6 |
-| 调光 | TIM3_CH3 PWM → N-MOS 管 → 3 W 暖白 LED | PB0，1 kHz |
-| 按键 | 亮度+ / 亮度− 轻触开关 | PA0（高有效）/ PB8（低有效） |
-| 语音 | MY1680U-12P + TF 卡 + 喇叭 | USART2：PA2/PA3，BUSY=PB11，9600 bps |
-| 状态灯 | 3 × 指示 LED | PC0 / PC1 / PC2 |
-| 调试 | USART1 + ST-Link SWD | PA9/PA10，PA13/PA14 |
+| 主控 | STM32F103C8T6（Cortex-M3，64 KB Flash / 20 KB RAM） | — |
+| 显示 | 1.8″ ST7735S TFT，128×160，RGB565，8P FPC | SPI2：SCK=PB13，SDA=PB15，CS=PB12，RS=PB10，RES=PB9，BLK=PB8 |
+| 调光 | TIM1_CH2 PWM → NPN（SS8050）→ 3 W 暖白 LED | PA9，1 kHz |
+| 按键 | 亮度+ / 亮度− 轻触开关 | PB6 / PB7（外 10kΩ 上拉，低有效） |
+| 语音 | MY1680U-12P + TF 卡 + 喇叭 | USART2：PA2/PA3，BUSY=PA4，9600 bps |
+| 烧录 | ST-Link SWD | PA13 / PA14 |
 
 > 完整引脚映射、BOM、PWM 时序与接线说明见 **[docs/hardware.md](docs/hardware.md)**。
 
@@ -108,7 +107,7 @@ firmware/user/api/
 
 ## 快速开始
 
-**环境要求**：Keil MDK-ARM（ARM Compiler 5）、ST-Link V2、STM32F103RC 开发板
+**环境要求**：Keil MDK-ARM（ARM Compiler 5）、ST-Link V2、STM32F103C8T6 自制板/核心板
 
 ```bash
 # 1. 克隆仓库

@@ -1,12 +1,14 @@
 # 硬件设计说明（Hardware）
 
-> 本文档所有引脚分配、定时器通道、通信参数均**依据固件源码逐一核对**，与 `firmware/` 中的工程保持一致。
+> 本文档所有引脚分配、定时器通道、通信参数均**依据最终工程原理图逐脚核对**，与立创EDA 工程保持一致。
+>
+> 正式原理图见 [`assets/schematic.png`](assets/schematic.png)（嘉立创EDA 导出）。
 
-- **主控 MCU**：STM32F103RC（ARM Cortex-M3，72 MHz，256 KB Flash / 48 KB SRAM，LQFP64）
-- **固件库**：STM32F10x Standard Peripheral Library V3.5.0（编译宏 `STM32F10X_HD, USE_STDPERIPH_DRIVER`，启动文件 `startup_stm32f10x_hd.s`）
-- **显示**：1.8″ TFT 彩屏，驱动 IC **ST7735S**，128×160，RGB565，硬件 SPI
+- **主控 MCU**：STM32F103**C8T6**（ARM Cortex-M3，72 MHz，**64 KB Flash / 20 KB SRAM**，LQFP48）
+- **固件库**：STM32F10x Standard Peripheral Library V3.5.0（编译宏 `STM32F10X_MD, USE_STDPERIPH_DRIVER`，启动文件 `startup_stm32f10x_md.s`）
+- **显示**：1.8″ TFT 彩屏，驱动 IC **ST7735S**，128×160，RGB565，硬件 **SPI2**，经 **8P FPC** 座连接
 - **语音**：MY1680U-12P MP3 语音模块（UART 指令 + TF 卡音频）
-- **调光**：TIM3 PWM 驱动 N-MOS 管控制大功率 LED 灯珠
+- **调光**：TIM1_CH2 经 NPN 三极管（SS8050）低边驱动大功率 LED 灯珠
 
 ---
 
@@ -15,21 +17,19 @@
 ```mermaid
 flowchart LR
     subgraph IN[输入]
-        K1["KEY1 亮度+<br/>PA0"]
-        K2["KEY2 亮度-<br/>PB8"]
+        K1["KEY1 亮度+<br/>PB6"]
+        K2["KEY2 亮度-<br/>PB7"]
         RST["复位按键<br/>NRST"]
     end
 
-    MCU["STM32F103RC<br/>Cortex-M3 @72MHz"]
+    MCU["STM32F103C8T6<br/>Cortex-M3 @72MHz"]
 
     subgraph OUT[输出 / 交互]
-        TFT["ST7735S TFT<br/>128×160 · SPI2"]
-        LED["LED 灯珠<br/>TIM3_CH3 / PB0"]
+        TFT["ST7735S TFT<br/>128×160 · SPI2 · 8P FPC"]
+        LED["LED 灯珠<br/>TIM1_CH2 / PA9"]
         VOICE["MY1680 语音<br/>USART2"]
-        LED3["状态指示灯 ×3<br/>PC0 / PC1 / PC2"]
     end
 
-    DBG["USART1 调试串口<br/>PA9 / PA10 · 115200"]
     SWD["ST-Link / SWD<br/>PA13 / PA14"]
 
     K1 --> MCU
@@ -38,8 +38,6 @@ flowchart LR
     MCU --> TFT
     MCU --> LED
     MCU --> VOICE
-    MCU --> LED3
-    MCU <--> DBG
     SWD --> MCU
 ```
 
@@ -47,7 +45,7 @@ flowchart LR
 
 ## 2. 完整接线示意图
 
-下图按固件实际引脚绘制（含电源轨与引脚复用提示）。矢量源文件为 [`assets/wiring.svg`](assets/wiring.svg)，可自由放大或二次编辑：
+下图按最终工程引脚绘制（含电源轨）。矢量源文件为 [`assets/wiring.svg`](assets/wiring.svg)，可自由放大或二次编辑：
 
 <p align="center">
   <img src="assets/wiring.png" alt="硬件接线示意图" width="940">
@@ -57,50 +55,37 @@ flowchart LR
 
 ## 3. 引脚映射表（Pinout）
 
-| 功能 | STM32 引脚 | 外设 / 模式 | 电平 / 参数 | 源码位置 |
+| 功能 | STM32 引脚 | 外设 / 模式 | 电平 / 参数 | 备注 |
 |---|---|---|---|---|
-| **PWM 调光输出** | `PB0` | TIM3_CH3，复用推挽 | 1 kHz，PWM1，高有效 | `user/api/pwm.c` |
-| **KEY1 亮度加** | `PA0` | 浮空输入 | 按下为**高电平** | `user/api/key.c` |
-| **KEY2 亮度减** | `PB8` | 浮空输入 | 按下为**低电平** | `user/api/key.c` |
-| 状态指示灯 LED1 | `PC0` | 推挽输出 | 低电平点亮 | `user/api/led.c` |
-| 状态指示灯 LED2 | `PC1` | 推挽输出 | 低电平点亮 | `user/api/led.c` |
-| 状态指示灯 LED3 | `PC2` | 推挽输出 | 低电平点亮 | `user/api/led.c` |
-| 调试串口 USART1_TX | `PA9` | 复用推挽 | 115200-8-N-1 | `user/api/usart.c` |
-| 调试串口 USART1_RX | `PA10` | 浮空输入 | 115200-8-N-1 | `user/api/usart.c` |
-| 语音 USART2_TX → MY1680_RX | `PA2` | 复用推挽 | 9600-8-N-1 | `user/api/MY1680.c` |
-| 语音 USART2_RX ← MY1680_TX | `PA3` | 浮空输入 | 9600-8-N-1 | `user/api/MY1680.c` |
-| 语音 BUSY 检测 | `PB11` | 浮空输入 | 播放中为高电平 | `user/api/MY1680.h` |
-| TFT SPI2_SCK | `PB13` | 复用推挽 | SPI2 主机，MSB | `user/api/spi.c` |
-| TFT SPI2_MISO | `PB14` | 浮空输入 | — | `user/api/spi.c` |
-| TFT SPI2_MOSI | `PB15` | 复用推挽 | — | `user/api/spi.c` |
-| TFT 片选 CS | `PB10` | 推挽输出 | 低有效 | `user/api/lcd.h` |
-| TFT 数据/命令 DC | `PB11` | 推挽输出 | 低=命令 / 高=数据 | `user/api/lcd.h` |
-| TFT 复位 RES | `PB12` | 推挽输出 | 低复位 | `user/api/lcd.h` |
-| TFT 背光 BK | `PC6` | 推挽输出 | 高点亮 | `user/api/lcd.h` |
-| SWD 调试 | `PA13 / PA14` | SWDIO / SWCLK | ST-Link | — |
-| 系统时钟 | OSC_IN / OSC_OUT | 8 MHz HSE + PLL | 倍频至 72 MHz | `system_stm32f10x.c` |
+| **PWM 调光输出** | `PA9` | TIM1_CH2，复用推挽 | 1 kHz，NPN 低边驱动 | 经 10kΩ → SS8050 基极 |
+| TFT SPI2_SCK | `PB13` | 复用推挽 | SPI2 主机，MSB | |
+| TFT SPI2_MOSI | `PB15` | 复用推挽 | 数据线 SDA | |
+| TFT 片选 CS | `PB12` | 推挽输出 | 低有效 | |
+| TFT 数据/命令 RS(DC) | `PB10` | 推挽输出 | 低=命令 / 高=数据 | |
+| TFT 复位 RES | `PB9` | 推挽输出 | 低复位（10kΩ 上拉） | |
+| TFT 背光 BLK | `PB8` | 推挽输出 | 高点亮（LEDA 经 47Ω） | |
+| **KEY1 亮度加** | `PB6` | 上拉输入 | 按下为**低电平**（外 10kΩ 上拉） | |
+| **KEY2 亮度减** | `PB7` | 上拉输入 | 按下为**低电平**（外 10kΩ 上拉） | |
+| 语音 USART2_TX → MY1680_RX | `PA2` | 复用推挽 | 9600-8-N-1 | |
+| 语音 USART2_RX ← MY1680_TX | `PA3` | 上拉输入 | 9600-8-N-1 | |
+| 语音 BUSY 检测 | `PA4` | 上拉输入 | 播放中为高电平 | 独立引脚，无复用冲突 |
+| 复位按键 | `NRST` | — | 10kΩ 上拉 + 100nF | |
+| SWD 烧录调试 | `PA13 / PA14` | SWDIO / SWCLK | ST-Link | |
+| 系统时钟 | OSC_IN / OSC_OUT | 8 MHz HSE + PLL | 倍频至 72 MHz | |
 
-> **引脚复用注意（PB11）**：当前固件中 `PB11` 同时被定义为 TFT 的 `DC`（`lcd.h`）与语音模块的 `BUSY`（`MY1680.h`）。二者在物理上只能接一个外设。实际接线以 TFT 的 `DC` 为准（屏幕显示为必需信号）；若需要使用语音 BUSY 忙检测，请把 BUSY 改接到任一空闲 GPIO 并同步修改 `MY1680.h` 中的 `MY1680_BUSY_*` 宏。详见文末[已知问题与改进](#6-已知问题与改进建议)。
+> 说明：本板 USB Type-C 仅用于供电（无 USB 转串口芯片），`PA9` 复用作 PWM，故未引出 USART1；程序烧录与调试走 SWD。按键 PB6/PB7 为普通 GPIO，**不需要禁用 JTAG**。
 
 ---
 
 ## 4. PWM 调光原理
 
-- 定时器：`TIM3`，通道 `CH3` → 引脚 `PB0`
-- 时钟：定时器输入 72 MHz
+- 定时器：`TIM1`，通道 `CH2` → 引脚 `PA9`
+- 定时器时钟：72 MHz
 - 预分频 `PSC = 72 - 1`，自动重装载 `ARR = 1000 - 1`
-- PWM 频率：
+- PWM 频率：`f = 72 MHz / 72 / 1000 = 1 kHz`，远高于人眼可感知频率，无频闪。
+- 比较寄存器 `CCR2` 取值 0 ~ 1000，对应占空比 0% ~ 100%。
 
-  ```
-  f_pwm = 72 MHz / 72 / 1000 = 1 kHz
-  ```
-
-  1 kHz 远高于人眼可感知的闪烁频率，配合视觉暂留实现**无频闪调光**。
-
-- 比较寄存器 `CCR3` 取值 0 ~ 1000，对应占空比 0% ~ 100%
-- 应用层亮度参数 `light ∈ [0,100]`，写入时 `CCR3 = light × 10`（内部做了 0~100 限幅）
-
-| 亮度档位 light | CCR3 | 占空比 | 语音文件（TF 卡） |
+| 亮度档位 light | CCR2 | 占空比 | 语音文件（TF 卡） |
 |:---:|:---:|:---:|:---|
 | 0（关灯） | 0 | 0% | `01/006.mp3` |
 | 25 | 250 | 25% | `01/002.mp3` |
@@ -109,7 +94,7 @@ flowchart LR
 | 100（最亮） | 1000 | 100% | `01/005.mp3` |
 | 开机欢迎 | — | — | `01/001.mp3` |
 
-- PB0 输出的 PWM 信号经限流电阻驱动 **N 沟道 MOS 管（如 AO3400 / S8050 三极管）**，功率 LED 灯珠接在电源与漏极之间，通过控制导通时间比例调节平均电流，从而调节亮度。
+- PA9 输出的 PWM 经 10kΩ 基极电阻驱动 **NPN 三极管 SS8050**（低边开关）：LED 灯珠接在 3.3V/5V 电源与集电极之间，基极高电平时三极管导通、LED 点亮，通过占空比调节平均电流从而调光。
 
 ---
 
@@ -117,28 +102,25 @@ flowchart LR
 
 | # | 名称 | 型号 / 规格 | 数量 | 说明 |
 |---|---|---|:---:|---|
-| 1 | 主控 | STM32F103RC 核心板 / 最小系统 | 1 | Cortex-M3，72 MHz |
-| 2 | TFT 彩屏 | 1.8″ ST7735S，128×160，SPI | 1 | 显示界面 |
-| 3 | 语音模块 | MY1680U-12P | 1 | UART 控制，TF 卡播放 |
-| 4 | TF 卡 | MicroSD（≤ 32 GB，FAT32） | 1 | 存放 `01/001~006.mp3` |
-| 5 | 喇叭 | 3 W / 4 Ω | 1 | 语音播报 |
-| 6 | 功率 LED | 6070 暖白 3 W 灯珠 | 1 | 主照明 |
-| 7 | 开关管 | N-MOS（AO3400 等） | 1 | PWM 驱动 LED |
-| 8 | 轻触按键 | TS-1187A 类 | 2 | 亮度 + / 亮度 − |
-| 9 | 状态指示灯 | 3 mm LED | 3 | PC0~PC2 |
+| 1 | 主控 | STM32F103C8T6 | 1 | Cortex-M3，72 MHz，LQFP48 |
+| 2 | TFT 彩屏 | 1.8″ ST7735S，128×160，SPI | 1 | 8P FPC 排线 |
+| 3 | FPC 连接器 | 0.5mm / 8P 翻盖 | 1 | 屏排线座 |
+| 4 | 语音模块 | MY1680U-12P | 1 | UART 控制，TF 卡播放 |
+| 5 | TF 卡 | MicroSD（≤ 32 GB，FAT32） | 1 | 存放 `01/001~006.mp3` |
+| 6 | 喇叭 | 3 W / 4 Ω | 1 | 语音播报 |
+| 7 | 功率 LED | 暖白 3 W 灯珠 | 1 | 主照明 |
+| 8 | 开关管 | SS8050（NPN） | 1 | PWM 低边驱动 LED |
+| 9 | 轻触按键 | TS-1187A 类 | 2 | 亮度 + / 亮度 − |
 | 10 | 稳压 | AMS1117-3.3 | 1 | 5 V → 3.3 V |
-| 11 | 电阻 / 电容 | 10 kΩ、1 kΩ、100 nF、10 µF 等 | 若干 | 上拉 / 限流 / 去耦 |
+| 11 | 电阻 / 电容 | 10kΩ、10kΩ(LED 限流)、100nF、10µF、47Ω 等 | 若干 | 上拉 / 限流 / 去耦 |
 | 12 | 下载调试 | ST-Link V2（SWD） | 1 | 烧录与调试 |
-| 13 | 供电 | USB / Type-C 5 V | 1 | 系统供电 |
-
-> TFT 与主控的接线：`SCK→PB13、MISO→PB14、MOSI→PB15、CS→PB10、DC→PB11、RES→PB12、BLK→PC6、VCC→3.3V、GND→GND`。
+| 13 | 供电 | USB Type-C 5 V | 1 | 仅供电 |
 
 ---
 
 ## 6. 已知问题与改进建议
 
-- **PB11 复用冲突**：TFT 的 DC 与语音 BUSY 当前都映射到 PB11，二选一使用；建议给 BUSY 单独分配空闲引脚。
-- **五档步进调光**：当前为 0/25/50/75/100 五档，后续可改为无级连续调光。
-- **可增加环境光传感器**（如 BH1750，I²C）实现自适应亮度，或用 ADC + 电位器/旋钮调光。
-- **可增加无线模块**（蓝牙 / Wi-Fi）与手机 App，配合已预留的 USART1 指令协议实现远程控制。
-- **可加入护眼策略**：定时休息提醒、模拟日出渐亮唤醒、长时间使用告警等。
+- **Flash 容量（64 KB）**：C8T6 仅 64 KB Flash，ST7735S 驱动 + 中文字库 + 语音协议需精简中文字模（仅保留开机必要汉字）；如需更大字库可改用引脚兼容的 **STM32F103CBT6（128 KB）**。
+- **无级调光**：当前为 0/25/50/75/100 五档，后续可改 ADC 旋钮 / 电容滑条无级调光。
+- **环境光自适应**：可在空闲 PB6/PB7 之外另引 I²C（PB6/PB7 硬件 I2C1）接 BH1750 实现自适应亮度。
+- **无线控制**：PA2/PA3 的 USART2 现占用，可另引空闲脚接蓝牙 / Wi-Fi 模块远程控制。

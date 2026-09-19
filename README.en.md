@@ -2,9 +2,9 @@
 
 # Smart Eye-Care Desk Lamp Firmware
 
-**STM32F103RC bare-metal firmware — PWM dimming, voice broadcast & TFT display**
+**STM32F103C8T6 bare-metal firmware — PWM dimming, voice broadcast & 1.8″ TFT display**
 
-[![MCU](https://img.shields.io/badge/MCU-STM32F103RC-blue)](https://www.st.com/en/microcontrollers-microprocessors/stm32f103rc.html)
+[![MCU](https://img.shields.io/badge/MCU-STM32F103C8T6-blue)](https://www.st.com/en/microcontrollers-microprocessors/stm32f103c8t6.html)
 [![Core](https://img.shields.io/badge/Core-ARM%20Cortex--M3%20%4072MHz-success)]()
 [![Toolchain](https://img.shields.io/badge/Keil-MDK--ARM-orange)]()
 [![Library](https://img.shields.io/badge/StdPeriph_Lib-V3.5.0-orange)]()
@@ -25,11 +25,11 @@ The firmware follows a **bare-metal super-loop + interrupt** architecture on top
 
 ## Features
 
-- **Hardware PWM dimming** — TIM3_CH3, 1 kHz flicker-free; five levels (0/25/50/75/100%) with software clamping
-- **Button HMI** — brightness up/down keys with 10 ms software debounce and release detection
-- **TFT color display** — ST7735S (128×160, RGB565, hardware SPI2); custom characters, Chinese glyphs and bitmaps, boot splash screen
+- **Hardware PWM dimming** — TIM1_CH2 (PA9), 1 kHz flicker-free via an NPN low-side switch; five levels (0/25/50/75/100%) with software clamping
+- **Button HMI** — brightness up/down keys (PB6/PB7) with 10 ms software debounce and release detection
+- **TFT color display** — ST7735S (128×160, RGB565, hardware SPI2, 8P FPC); custom characters, Chinese glyphs and bitmaps, boot splash screen
 - **Voice broadcast** — MY1680 over USART2 using a custom binary frame; plays per-level audio from a TF card, with BUSY polling to avoid dropped commands
-- **Debug UART** — USART1 @115200, redirected `printf`, RXNE+IDLE interrupts with a ring buffer, reserved host-control protocol
+- **SWD debugging** — ST-Link on PA13/PA14 for flashing & debugging; framed UART protocol reserved for wireless expansion
 - **Accurate timing** — 1 ms SysTick tick for ms/µs delays
 - **Extensible** — framed UART command protocol with checksums, ready for ambient-light sensing or wireless control
 
@@ -38,10 +38,10 @@ The firmware follows a **bare-metal super-loop + interrupt** architecture on top
 ```mermaid
 flowchart LR
     subgraph IN[Inputs]
-        K1["KEY1 Brightness+<br/>PA0"]
-        K2["KEY2 Brightness-<br/>PB8"]
+        K1["KEY1 Brightness+<br/>PB6"]
+        K2["KEY2 Brightness-<br/>PB7"]
     end
-    MCU["STM32F103RC<br/>Cortex-M3 @72MHz"]
+    MCU["STM32F103C8T6<br/>Cortex-M3 @72MHz"]
     subgraph OUT[Outputs]
         TFT["ST7735S TFT<br/>128x160 - SPI2"]
         LED["Power LED<br/>PWM - PB0"]
@@ -66,13 +66,12 @@ flowchart LR
 
 | Block | Device | Interface / Pins |
 |---|---|---|
-| MCU | STM32F103RC (Cortex-M3, 256 KB Flash / 48 KB RAM) | — |
-| Display | 1.8″ ST7735S TFT, 128×160, RGB565 | SPI2 PB13/14/15; CS=PB10, DC=PB11, RES=PB12, BLK=PC6 |
-| Dimming | TIM3_CH3 PWM → N-MOSFET → 3 W warm-white LED | PB0, 1 kHz |
-| Buttons | Up / Down tactile switches | PA0 (active-high) / PB8 (active-low) |
-| Voice | MY1680U-12P + TF card + speaker | USART2 PA2/PA3, BUSY=PB11, 9600 bps |
-| Status LEDs | 3 × indicator LEDs | PC0 / PC1 / PC2 |
-| Debug | USART1 + ST-Link SWD | PA9/PA10, PA13/PA14 |
+| MCU | STM32F103C8T6 (Cortex-M3, 64 KB Flash / 20 KB RAM) | — |
+| Display | 1.8″ ST7735S TFT, 128×160, RGB565, 8P FPC | SPI2: SCK=PB13, SDA=PB15, CS=PB12, RS=PB10, RES=PB9, BLK=PB8 |
+| Dimming | TIM1_CH2 PWM → NPN(SS8050) → 3 W warm-white LED | PA9, 1 kHz |
+| Buttons | Up / Down tactile switches | PB6 / PB7 (10kΩ pull-up, active-low) |
+| Voice | MY1680U-12P + TF card + speaker | USART2: PA2/PA3, BUSY=PA4, 9600 bps |
+| Debug | ST-Link SWD | PA13 / PA14 |
 
 > Full pinout, BOM, PWM timing and wiring notes: **[docs/hardware.md](docs/hardware.md)**.
 
