@@ -40,27 +40,6 @@ The firmware follows a **bare-metal super-loop + interrupt** architecture on top
   <br><sub>Hand-drawn system block diagram</sub>
 </p>
 
-```mermaid
-flowchart LR
-    subgraph IN[Inputs]
-        K1["KEY1 Brightness+<br/>PB6"]
-        K2["KEY2 Brightness-<br/>PB7"]
-    end
-    MCU["STM32F103C8T6<br/>Cortex-M3 @72MHz"]
-    subgraph OUT[Outputs]
-        TFT["ST7735S TFT<br/>128x160 - SPI2"]
-        LED["Power LED<br/>PWM - PA9"]
-        VOICE["MY1680 Voice<br/>USART2"]
-    end
-    DBG["SWD debug<br/>PA13 / PA14"]
-    K1 --> MCU
-    K2 --> MCU
-    MCU --> TFT
-    MCU --> LED
-    MCU --> VOICE
-    MCU <--> DBG
-```
-
 ## Hardware
 
 <p align="center">
@@ -81,20 +60,6 @@ flowchart LR
 > Full pinout, BOM, PWM timing and wiring notes: **[docs/hardware.md](docs/hardware.md)**.
 
 ## Software
-
-```mermaid
-flowchart TD
-    A[Power-on init] --> B[TFT boot splash]
-    B --> C[Play welcome audio]
-    C --> D{Scan buttons in main loop}
-    D -->|KEY1| E["brightness +25 (cap 100)"]
-    D -->|KEY2| F["brightness -25 (floor 0)"]
-    D -->|none| D
-    E --> G[Update PWM duty]
-    F --> G
-    G --> H[Announce level]
-    H --> D
-```
 
 Layered as **Standard Peripheral Library → BSP drivers → application**:
 

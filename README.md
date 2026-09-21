@@ -38,27 +38,6 @@
   <br><sub>系统框图（手绘初稿）</sub>
 </p>
 
-```mermaid
-flowchart LR
-    subgraph IN[输入]
-        K1["KEY1 亮度+<br/>PB6"]
-        K2["KEY2 亮度-<br/>PB7"]
-    end
-    MCU["STM32F103C8T6<br/>Cortex-M3 @72MHz"]
-    subgraph OUT[输出 / 交互]
-        TFT["ST7735S TFT<br/>128×160 · SPI2"]
-        LED["LED 灯珠<br/>PWM · PA9"]
-        VOICE["MY1680 语音<br/>USART2"]
-    end
-    DBG["SWD 烧录调试<br/>PA13 / PA14"]
-    K1 --> MCU
-    K2 --> MCU
-    MCU --> TFT
-    MCU --> LED
-    MCU --> VOICE
-    MCU <--> DBG
-```
-
 ## 硬件方案
 
 <p align="center">
@@ -79,20 +58,6 @@ flowchart LR
 > 完整引脚映射、BOM、PWM 时序与接线说明见 **[docs/hardware.md](docs/hardware.md)**。
 
 ## 软件设计
-
-```mermaid
-flowchart TD
-    A[上电初始化外设] --> B[TFT 显示欢迎界面]
-    B --> C[播放开机语音]
-    C --> D{主循环扫描按键}
-    D -->|KEY1| E["亮度 +25（上限 100）"]
-    D -->|KEY2| F["亮度 -25（下限 0）"]
-    D -->|无按键| D
-    E --> G[更新 PWM 占空比]
-    F --> G
-    G --> H[播放对应档位语音]
-    H --> D
-```
 
 代码按「标准库 → BSP 驱动 → 应用层」分层组织：
 
